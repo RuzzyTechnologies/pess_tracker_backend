@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  api-node:
+    image: api-node
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: dev
+    init: true
+    volumes:
+      - type: bind
+        source: ./
+        target: /usr/src/app
+      - type: volume
+        target: /usr/src/app/node_modules
+    depends_on:
+      - db
+    environment:
+      - name=value
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+  db:
+    image: postgres:15.1-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - name=value
+    ports:
+      - 5432:5432
+  volumes:
+    pgdata:
