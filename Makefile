@@ -8,7 +8,7 @@ compose-build:
 
 .PHONY: compose-up
 compose-up:
-	docker compose -f $(DEV_COMPOSE_FILE) up
+	docker compose -f $(DEV_COMPOSE_FILE) up -d
 
 .PHONY: compose-up-build
 compose-up-build:
@@ -17,6 +17,10 @@ compose-up-build:
 .PHONY: compose-down
 compose-down:
 	docker compose -f $(DEV_COMPOSE_FILE) down
+
+.PHONY: compose-down-v
+compose-down-v:
+	docker compose -f $(DEV_COMPOSE_FILE) down -v
 
 ####
 .PHONY: run-tests

@@ -21,10 +21,11 @@ services:
       - "3000:3000"
     restart: unless-stopped
   db:
-    image: postgres:15.1-alpine
+    image: postgres:17.6-alpine3.22
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - 5432:5432
