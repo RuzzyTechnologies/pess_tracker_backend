@@ -16,6 +16,7 @@
     "url": "https://github.com/RuzzyTechnologies/pess_tracker_backend/issues"
   },
   "dependencies": {
+    "class-validator": "^0.14.2",
     "cors": "^2.8.5",
     "dayjs": "^1.11.18",
     "express": "^5.1.0",

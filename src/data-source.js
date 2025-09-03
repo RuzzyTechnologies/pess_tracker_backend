@@ -10,7 +10,8 @@ const AppDataSource = new DataSource({
   logging: false,
   entities: ["src/models/**/*.js"],
   migrations: ['src/migrations/**/*.js'],
-  migrationsTableName: "migrations"
+  migrationsTableName: "migrations",
+  subscribers: ["src/subscribers/**/*.js"],
 
 });
 
