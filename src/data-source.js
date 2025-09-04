@@ -1,6 +1,5 @@
 require("reflect-metadata");
 const { DataSource } = require("typeorm");
-const User = require("./models/user");
 
 
 const AppDataSource = new DataSource({

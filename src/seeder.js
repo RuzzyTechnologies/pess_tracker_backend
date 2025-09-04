@@ -12,7 +12,7 @@ const createUsers = async () => {
     const user1 = userRepository.create({
       firstName: "John",
       lastName: "Doe",
-      email: "john@example.com",
+      email: "jOHN@example.com",
       password: "password",
     });
 
