@@ -1,37 +1,40 @@
-const { isEmail, isURL } = require('class-validator');
+const { isURL } = require('class-validator');
+const bcrypt = require("bcryptjs");
 
 const AppDataSource = require("../data-source");
 const { ResourceNotFound } = require("../utils/error");
+const userRole = require("../enums/userRole")
 
 module.exports = class UserService {
 
-
-  async _userRepository() {
+  async #userRepository() {
     const appDataSource = await AppDataSource;
     return appDataSource.getRepository("User");
   }
 
-  async validateEmail(email) {
-    if (!isEmail(email)) throw new Error("Invalid Email format")
-    return email.toLowerCase();
-  }
-
-  async validateProfileUrl(url) {
+  async #validateProfileUrl(url) {
     if (!isURL(url)) throw new Error("Invalid URL format");
     return url;
   }
 
-  async createUser(firstName, lastName, email, password, url) {
+  async createUser(firstName, lastName, email, password, url, role) {
     try {
-      const user = await this._userRepository.create({
+      const user = this.#userRepository.findOneBy({ email });
+      if (user) {
+        throw new Error("Email already exists. Please use a new one.")
+      }
+
+      const newUser = await this.#userRepository.create({
         firstName,
         lastName,
-        email: this.validateEmail(email),
+        email,
         password,
-        url: this.validateProfileUrl(`${url}/${firstName}`)
+        url: this.#validateProfileUrl(`${url}/${firstName}`),
+        role,
       });
 
-      this._userRepository.save(user);
+      await this.#userRepository.save(user);
+      return newUser;
     } catch (e) {
       throw new Error("Error creating user", e);
     }
@@ -39,7 +42,7 @@ module.exports = class UserService {
 
   async getUserById(id) {
     try {
-      const user = await this._userRepository.findOneBy({ where: { id } });
+      const user = await this.#userRepository.findOneBy({ where: { id } });
       if (!user) {
         throw new ResourceNotFound("User not found!")
       }
@@ -51,7 +54,7 @@ module.exports = class UserService {
 
   async getUserByEmail(email) {
     try {
-      const user = await this._userRepository.findOneBy({ where: { email } });
+      const user = await this.#userRepository.findOneBy({ where: { email } });
       if (!user) {
         throw new ResourceNotFound("User not found!")
       }
@@ -63,10 +66,11 @@ module.exports = class UserService {
 
   async getAllUsers() {
     try {
-      const users = await this._userRepository.find({});
+      const users = await this.#userRepository.find({});
       if (!users) {
         throw new ResourceNotFound("Unable to find users!");
       }
+      return users;
     } catch (e) {
       throw new Error("Error finding users", e)
     }
@@ -74,39 +78,63 @@ module.exports = class UserService {
 
   async softDeleteUser(id) {
     try {
-      const user = await this._userRepository.findOneBy({ where: { id } });
+      const user = await this.#userRepository.findOneBy({ where: { id } });
       if (!user) {
         throw new ResourceNotFound("User not found!")
       }
-      user.is_userRepositorye;
-      await this._userRepository.save(user);
-      const deletedUser = await this._userRepository.softDelete({ id });
+      user.is_deleted = true;
+      await this.#userRepository.save(user);
+      const deletedUser = await this.#userRepository.softDelete({ id });
       return deletedUser;
     } catch (e) {
       throw new Error("Error deleting user", e)
     }
   }
 
-  async updateUser(id) {
-    //  update fields like firstname, lastname, email
-  }
-
-  async updateProfileName(id, url) {
-    // update fields profileName and profileURL.
-  }
-
-  async updatePassword(id, newPassword) {
+  async updateUser(id, payload) {
     try {
-      const user = await this._getRepository.findOneBy({ where: { id } });
+
+      const updates = Object.keys(payload);
+      const allowedUpdates = ["firstName", "lastName", "email", "profileName"];
+      const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+
+      if (!isValidOperation) {
+        throw new Error("Invalid Updates");
+      }
+
+      const { firstName, lastName, email, profileName } = payload;
+
+      const user = await this.#userRepository.findOneBy({ where: { id } });
+      if (!user) {
+        throw new ResourceNotFound("User not found");
+      }
+
+      user.firstName = firstName;
+      user.lastName = lastName;
+      user.email = email;
+      user.profileName = profileName;
+
+      await this.#userRepository.save(user);
+      return user;
+    } catch (e) {
+      throw new Error('Error updating user', e);
+    }
+
+  }
+
+
+  async updatePassword(id, payload) {
+    try {
+      const user = await this.#userRepository.findOneBy({ where: { id } });
       if (!user) {
         throw new ResourceNotFound("User not found!")
       }
 
-      //  hash new password
+      const { password } = payload;
 
-      // set user password to new password.
-
-      // return done
+      user.passsword = password;
+      await this.#userRepository.save(user);
+      return user;
 
 
     } catch (e) {
@@ -114,10 +142,22 @@ module.exports = class UserService {
     }
   }
 
-  async comparePassword(password, hashedPassword) {
-    // do this in the user model or sumn. 
+  async uploadAvatar(id, file) {
+
   }
 
+  async updateAvatar(id) {
+
+  }
+
+  async comparePassword(newPassword, hashedPassword) {
+    return bcrypt.compare(newPassword, hashedPassword);
+  }
+
+  createToken(id, email) {
+    const token = jwt.sign({ id, email }, process.env.JWT_SECRET, { expiresIn: "10h" })
+    return token;
+  };
 
 
 };
