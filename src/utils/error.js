@@ -42,7 +42,7 @@ class InvalidInput extends HttpError {
 }
 class ServerError extends HttpError {
   constructor(message) {
-    super(405, message);
+    super(500, message);
   }
 }
 
