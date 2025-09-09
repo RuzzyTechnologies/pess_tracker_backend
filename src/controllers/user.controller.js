@@ -1,6 +1,7 @@
-import UserService from "../services/user.services";
+const UserService = require("../services/user.services");
+const { HttpError } = require("../utils/error")
 
-export class User {
+module.exports = class User {
   #userService;
 
   contructor() {
@@ -10,7 +11,7 @@ export class User {
   async signUp(req, res) {
     const { firstName, lastName, email, password, role } = req.body;
     try {
-      const user = await this.#userService.createUser(firstName, lastName, email, password, req.url, role);
+      const user = await this.#userService.createUser({ firstName, lastName, email, password, role }, req.url);
       res.status(201).json({
         status: 201,
         message: "User successfully created",
@@ -79,8 +80,7 @@ export class User {
     }
   }
 
-  // find specific user
-  async getUser(req, res) {
+  async getUserById(req, res) {
     const { id } = req.params;
 
     try {
@@ -98,7 +98,8 @@ export class User {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          role: user.role
+          role: user.role,
+          profileName: user.profileName
         }
       })
     } catch (e) {
@@ -116,17 +117,15 @@ export class User {
     }
   };
 
-  // get all users
   async getAllUsers(req, res) {
     try {
       const users = await this.#userService.getAllUsers()
-      const safeUsers = users.map(({ password, ...data }) => data);
       if (!users)
         return res.status(404).json({
           status: 404,
           message: "User not found"
         })
-
+      const safeUsers = users.map(({ password, ...data }) => data);
       res.status(200).json({
         status: 200,
         message: "Successful",
@@ -147,10 +146,77 @@ export class User {
     }
   };
 
+  async updateUser(req, res) {
+    try {
+      const { id } = req.params;
+      const { firstName, lastName, email, profileName } = req.body;
 
-  // delete user
+      const user = await this.#userService.updateUser(id, { firstName, lastName, email, profileName });
+      res.status(200).send({
+        status: 200,
+        message: "Successful",
+        data: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          profileName: user.profileName,
+        }
+      })
+    } catch (e) {
+      if (e instanceof HttpError) return res.status(e.status_code).json({
+        status: e.status_code,
+        message: e.message
+      })
+      res.status(500).json({
+        status: 500,
+        message: e.message || "Internal Server Error",
+      })
+    }
+  }
+
+  async updateUserPassword(req, res) {
+    try {
+      const { id } = req.params;
+      const { password } = req.body;
+
+      await this.#userService.updateUserPassword(id, { password });
+      res.status(200).send({
+        status: 200,
+        message: "Password updated successfully!"
+      })
+    } catch (e) {
+      if (e instanceof HttpError) return res.status(e.status_code).json({
+        status: e.status_code,
+        message: e.message
+      })
+      res.status(500).json({
+        status: 500,
+        message: e.message || "Internal Server Error",
+      })
+    }
+  }
 
   async deleteUser(req, res) {
+    try {
+      const { id } = req.params;
 
+      await this.#userService.softDeleteUser(id);
+      res.status(200).send({
+        status: 200,
+        message: "Successful",
+        message: "User deleted successfully!"
+      })
+    } catch (e) {
+      if (e instanceof HttpError) return res.status(e.status_code).json({
+        status: e.status_code,
+        message: e.message
+      })
+      res.status(500).json({
+        status: 500,
+        message: e.message || "Internal Server Error",
+      })
+    }
   }
 };
+

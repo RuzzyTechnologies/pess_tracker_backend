@@ -26,12 +26,12 @@ function urlParser(url) {
 
 
 function validateCompanyEmail(email) {
-  const allowedAddresses = ["outdoors.ng", "xpark360.ng", "pdma.io", "premiumdigitalmarketing.ng", "essdigital.ng"];
+  const allowedDomains = ["outdoors.ng", "xpark360.ng", "pdma.io", "premiumdigitalmarketing.ng", "essdigital.ng"];
 
   const AtIndex = email.indexOf("@");
   const address = email.slice(AtIndex + 1);
 
-  if (!allowedAddresses.includes(address)) {
+  if (!allowedDomains.includes(address)) {
     return false;
   }
   return true;
